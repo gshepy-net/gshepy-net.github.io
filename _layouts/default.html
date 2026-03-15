@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: "en-US" }}">
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
+
+    {% if page.confirm_email %}
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    {% endif %}
+
+    {% include head-custom.html %}
+    {% if page.register_form %}
+    <script src="https://smartcaptcha.cloud.yandex.ru/captcha.js" async defer></script>
+<script>
+  window.onload = function() {
+    document.getElementById('myForm').addEventListener('submit', function (event) {
+      // Prevent the default form submission
+      event.preventDefault();
+
+      // Get the form element
+      const form = event.target;
+      
+      // Create a FormData object from the form
+      const formData = new FormData(form);
+      const captcha_value  = formData.get("smart-token");
+      console.log('captcha_value = ' + captcha_value);
+
+      if (!captcha_value) {
+        document.getElementById('form_warning').textContent = 'Пройдите проверку на робота.';
+        return;
+      }
+
+      // Convert FormData to a plain JavaScript object
+      const dataObject = Object.fromEntries(formData.entries());
+
+      // Convert the object to a JSON string
+      const jsonPayload = JSON.stringify(dataObject);
+
+      // Send the data using the Fetch API
+      const url = new URL('register', '{{ site.gshepy__api_url }}');
+      fetch(url, {
+        method: 'POST',
+        mode: 'cors',
+        cache: 'no-store',
+        headers: {
+            'Content-Type': 'application/json', // Set the content type to JSON
+            'Accept': 'application/json' // Optionally, state that you accept JSON responses
+        },
+        body: jsonPayload // The JSON string as the request body
+      })
+      .then(response => {
+          console.log("11111: "+ JSON.stringify(response));
+          if (!response.ok) {
+            console.log("222");
+            throw new Error('Network response was not ok');
+          }
+          //return response.json(); // or response.text() if your server doesn't return JSON
+          return response.text(); // or response.text() if your server doesn't return JSON
+        })
+        .then(data => {
+            console.log('Success:', data);
+            // Reset form after success
+            form.reset();
+
+            window.location.replace("./registraciya-ok.html")
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            alert('An error occurred. Check the console for details.');
+        });
+    });
+  }
+</script>
+    {% endif %}
+
+    {% if page.confirm_email %}
+    <script>
+      window.onload = function() {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+
+        console.log('token = ' + token);
+
+        if (!params.has('token')) {
+            window.location.replace("./")
+        }
+
+        const url = new URL('confirm_email', '{{ site.gshepy__api_url }}');
+        url.searchParams.append('token', token);
+
+        fetch(url, {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'no-store'
+        })
+        .then(response => {
+          console.log("response.status: "+ response.status);
+          console.log("response.ok: "+ response.ok);
+
+          if (!response.ok) {
+            if (response.status == 410) {
+              throw new Error('Срок действия кода подтверждения истёк.');
+            }
+
+            throw new Error('Не удалось подтвердить почтовый адрес из-за внутренней ошибки на сервере ("' + response.status + ',' + response.headers.get('X-ERROR-CODE') + '"). Попробуйте повторить запрос позднее.');
+          }
+
+          return response.text();
+        })
+        .then(data => {
+            console.log('Success:', data);
+
+            document.getElementById('result_confirmation').textContent = 'Почтовый адрес подтверждён успешно!';
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            document.getElementById('result_confirmation').textContent = error.message;
+        });
+      }
+    </script>
+    {% endif %}
+
+
+{% seo %}
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <a id="a-title" href="{{ '/' | relative_url }}">
+          <h1>{{ site.title | default: site.github.repository_name }}</h1>
+        </a>
+        <h2>{{ site.description | default: site.github.project_tagline }}</h2>
+
+        <section id="downloads">
+            <a href="./skachat.html" class="btn">Скачать</a>
+            <a href="./registraciya.html" class="btn">Регистрация</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        {{ content }}
+      </section>
+    </div>
+  </body>
+</html>
