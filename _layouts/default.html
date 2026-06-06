@@ -124,7 +124,47 @@
     </script>
     {% endif %}
 
+    {% if page.steam_callback %}
+    <script>
+      window.onload = function() {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        if (!params.has('token')) {
+          window.location.replace("./")
+        }
 
+        const url = new URL('steam/callback', '{{ site.gshepy__api_url }}');
+        for (const [key, value] of params.entries()) {
+          url.searchParams.append(key, value);
+        }
+
+        fetch(url, {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'no-store'
+        })
+        .then(response => {
+          console.log("response.status: "+ response.status);
+          console.log("response.ok: "+ response.ok);
+
+          if (!response.ok) {
+            throw new Error('Не удалось войти из-за внутренней ошибки на сервере ("' + response.status + ',' + response.headers.get('X-ERROR-CODE') + '"). Попробуйте повторить запрос позднее.');
+          }
+
+          return response.text();
+        })
+        .then(data => {
+            console.log('Success:', data);
+
+            window.location.href = `gshepy-net://login/jwt?jwt=${data}`;
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            document.getElementById('result').textContent = error.message;
+        });
+      }
+    </script>
+    {% endif %}
 {% seo %}
   </head>
 
