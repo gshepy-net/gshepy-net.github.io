@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /podtverzhdenie.html
+Disallow: /registraciya-ok.html
+Disallow: /steam_callback.html
+Allow: /
