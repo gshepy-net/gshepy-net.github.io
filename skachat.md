@@ -5,9 +5,8 @@ layout: default
 <a href="{{ site.gshepy__api_url }}/update/installer" id="link_download">Скачать установщик</a>
 
 <script>
-    const urlBase = new URL('update', '{{ site.gshepy__api_url }}');
-
-    const urlEndpoint = new URL('./get_last_version', urlBase);
+    const urlBase = new URL('update/', '{{ site.gshepy__api_url }}');
+    const urlEndpoint = new URL('get_last_version', urlBase);
 
     let response = fetch(urlEndpoint, {
         method: 'GET',
